@@ -77,6 +77,7 @@ M.preedit_handler = function(preedit_text)
       ime_context.base_col,
       { preedit_text }
     )
+    vim.api.nvim_win_set_cursor(0, { ime_context.preedit_row, ime_context.preedit_col })
   else
     vim.api.nvim_buf_set_text(
       0,
@@ -86,6 +87,7 @@ M.preedit_handler = function(preedit_text)
       ime_context.preedit_col,
       {}
     )
+    vim.api.nvim_win_set_cursor(0, { ime_context.preedit_row, ime_context.preedit_col })
   end
 end
 
