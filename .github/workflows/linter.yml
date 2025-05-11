@@ -21,6 +21,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: /
           VALIDATE_LUA: false
+          VALIDATE_CHECKOV: false
+          VALIDATE_MARKDOWN_PRETTIER: false
+          VALIDATE_YAML_PRETTIER: false
 
       - uses: taiki-e/install-action@v2
         with:
@@ -29,4 +32,3 @@ jobs:
       - name: Lint Code Base(Lua)
         run: |
           selene . -q
-
