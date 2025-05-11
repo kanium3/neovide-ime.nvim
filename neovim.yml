@@ -1,0 +1,8 @@
+# Using selene
+base: lua51
+
+globals:
+  vim:
+    any: true
+  neovide:
+    any: true

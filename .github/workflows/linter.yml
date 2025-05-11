@@ -15,10 +15,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Lint Code Base
-        uses: github/super-linter/slim@v4
+      - name: Lint Code Base(Expect Lua)
+        uses: github/super-linter/slim@v7
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LINTER_RULES_PATH: /
-          VALIDATE_JSCPD: false
-          VALIDATE_PYTHON_BLACK: false
+          VALIDATE_LUA: false
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: selene
+
+      - name: Lint Code Base(Lua)
+        run: |
+          selene . -q
+
