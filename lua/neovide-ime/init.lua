@@ -3,10 +3,10 @@ local M = {}
 ---@class ImeContext
 ---@field entered_preedit_block boolean
 ---@field is_commited boolean
----@field base_row integer The absolute position of the cursor's row within the window.
----@field base_col integer The absolute position of the cursor's column within the window.
----@field preedit_col integer The position added the cursor's colomn and the offset of text
----@field preedit_row integer The position added the cursor's row and the offset of text
+---@field base_row integer The absolute bytes based position of the cursor's row within the window.
+---@field base_col integer The absolute bytes based position of the cursor's column within the window.
+---@field preedit_col integer The position added the cursor's colomn and the bytes offset of text
+---@field preedit_row integer The position added the cursor's row and the bytes offset of text
 
 ---@class ImePreeditData
 ---@field preedit_text string
@@ -31,7 +31,7 @@ ime_context.reset = function()
   ime_context.is_commited = false
 end
 
----Getting cursor's row and colomn
+---Getting cursor's row and colomn in bytes
 ---@param window_id? integer if not set, set current window id
 ---@return integer row
 ---@return integer colomn (started zero-colomn)
@@ -79,6 +79,7 @@ M.preedit_handler = function(preedit_text)
     )
     vim.api.nvim_win_set_cursor(0, { ime_context.preedit_row, ime_context.preedit_col })
   else
+    ime_context.entered_preedit_block = false
     vim.api.nvim_buf_set_text(
       0,
       ime_context.base_row - 1,
