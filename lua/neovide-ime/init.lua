@@ -9,10 +9,12 @@ local M = {}
 ---@field preedit_row integer The position added the cursor's row and the bytes offset of text
 
 ---@class ImePreeditData
----@field preedit_text string
+---@field preedit_raw_text string
+---@field cursor_offset? [integer, integer] (start_col, end_col) This values show the cursor begin position and end position. The position is byte-wise indexed.
 
 ---@class ImeCommitData
----@field commit_text string
+---@field commit_raw_text string
+---@field commit_formatted_text string It's escaped.
 
 ---@type ImeContext
 local ime_context = {
@@ -42,8 +44,9 @@ local function get_position_under_cursor(window_id)
   return row, col
 end
 
----@param preedit_text string
-M.preedit_handler = function(preedit_text)
+---@param preedit_raw_text string
+---@param cursor_offset? [integer, integer] (start_col, end_col) This values show the cursor begin position and end position. The position is byte-wise indexed.
+M.preedit_handler = function(preedit_raw_text, cursor_offset)
   if not vim.api.nvim_get_mode().mode == "i" then
     return
   end
@@ -59,7 +62,7 @@ M.preedit_handler = function(preedit_text)
     ime_context.preedit_row = ime_context.base_row
     ime_context.entered_preedit_block = true
   end
-  if preedit_text ~= nil and preedit_text ~= "" then
+  if preedit_raw_text ~= nil and preedit_raw_text ~= "" and cursor_offset ~= nil then
     vim.api.nvim_buf_set_text(
       0,
       ime_context.base_row - 1,
@@ -68,14 +71,14 @@ M.preedit_handler = function(preedit_text)
       ime_context.preedit_col,
       {}
     )
-    ime_context.preedit_col = ime_context.base_col + string.len(preedit_text)
+    ime_context.preedit_col = ime_context.base_col + cursor_offset[2]
     vim.api.nvim_buf_set_text(
       0,
       ime_context.base_row - 1,
       ime_context.base_col,
       ime_context.base_row - 1,
       ime_context.base_col,
-      { preedit_text }
+      { preedit_raw_text }
     )
     vim.api.nvim_win_set_cursor(0, { ime_context.preedit_row, ime_context.preedit_col })
   else
@@ -92,20 +95,21 @@ M.preedit_handler = function(preedit_text)
   end
 end
 
----@param commit_text string
-M.commit_handler = function(commit_text)
+---@param _commit_raw_text string
+---@param commit_formatted_text string It's escaped.
+M.commit_handler = function(_commit_raw_text, commit_formatted_text)
   if not vim.api.nvim_get_mode().mode == "i" then
     return
   end
 
-  ime_context.preedit_col = ime_context.base_col + string.len(commit_text)
+  ime_context.preedit_col = ime_context.base_col + string.len(commit_formatted_text)
   vim.api.nvim_buf_set_text(
     0,
     ime_context.base_row - 1,
     ime_context.base_col,
     ime_context.base_row - 1,
     ime_context.base_col,
-    { commit_text }
+    { commit_formatted_text }
   )
   vim.api.nvim_win_set_cursor(0, { ime_context.preedit_row, ime_context.preedit_col })
 
