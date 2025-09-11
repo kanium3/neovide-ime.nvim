@@ -26,7 +26,7 @@ local ime_context = {
   base_col = 0,
   preedit_text_row = 0,
   preedit_text_col = 0,
-  row = 0,
+  preedit_cursor_row = 0,
   preedit_cursor_col = 0,
 }
 
