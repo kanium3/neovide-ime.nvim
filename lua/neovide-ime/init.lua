@@ -3,12 +3,12 @@ local M = {}
 ---@class ImeContext
 ---@field entered_preedit_block boolean
 ---@field is_commited boolean
----@field base_col integer The absolute bytes based position of the cursor's column within the window.
 ---@field base_row integer The absolute bytes based position of the cursor's row within the window.
----@field preedit_cursor_col integer The position added the cursor's colomn and the offset of IME cursor
+---@field base_col integer The absolute bytes based position of the cursor's column within the window.
 ---@field preedit_cursor_row integer The position added the cursor's row and the offset of IME cursor
----@field preedit_text_col integer The position added the cursor's colomn and the bytes offset of text
+---@field preedit_cursor_col integer The position added the cursor's colomn and the offset of IME cursor
 ---@field preedit_text_row integer The position added the cursor's row and the bytes offset of text
+---@field preedit_text_col integer The position added the cursor's colomn and the bytes offset of text
 
 ---@class ImePreeditData
 ---@field preedit_raw_text string
@@ -22,18 +22,18 @@ local M = {}
 local ime_context = {
   entered_preedit_block = false,
   is_commited = false,
-  base_col = 0,
   base_row = 0,
-  preedit_text_col = 0,
+  base_col = 0,
   preedit_text_row = 0,
+  preedit_text_col = 0,
+  row = 0,
   preedit_cursor_col = 0,
-  preedit_cursor_row = 0,
 }
 
 ime_context.reset = function()
-  ime_context.preedit_text_row, ime_context.preedit_text_col = 0, 0
   ime_context.base_row, ime_context.base_col = 0, 0
   ime_context.preedit_cursor_row, ime_context.preedit_cursor_col = 0, 0
+  ime_context.preedit_text_row, ime_context.preedit_text_col = 0, 0
   ime_context.entered_preedit_block = false
   ime_context.is_commited = false
 end
@@ -64,10 +64,10 @@ M.preedit_handler = function(preedit_raw_text, cursor_offset)
     local row, col = get_position_under_cursor()
     ime_context.base_row = row
     ime_context.base_col = col
-    ime_context.preedit_text_col = ime_context.base_col
     ime_context.preedit_text_row = ime_context.base_row
-    ime_context.preedit_cursor_col = ime_context.base_col
+    ime_context.preedit_text_col = ime_context.base_col
     ime_context.preedit_cursor_row = ime_context.base_row
+    ime_context.preedit_cursor_col = ime_context.base_col
     ime_context.entered_preedit_block = true
   end
   if preedit_raw_text ~= nil and preedit_raw_text ~= "" and cursor_offset ~= nil then
