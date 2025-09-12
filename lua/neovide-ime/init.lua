@@ -9,7 +9,7 @@ local M = {}
 ---@field preedit_cursor_col integer The position added the cursor's colomn and the offset of IME cursor
 ---@field preedit_text_row integer The position added the cursor's row and the bytes offset of text
 ---@field preedit_text_col integer The position added the cursor's colomn and the bytes offset of text
----@field extmark_buffer_id? [integer, integer] The buffer id and the extmark id of the preedit text
+---@field extmark_id? [integer, integer] The buffer id and the extmark id of the preedit text
 
 ---@class ImePreeditData
 ---@field preedit_raw_text string
