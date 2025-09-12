@@ -160,7 +160,8 @@ local function preedit_handler_extmark(preedit_raw_text, cursor_offset)
           hl_mode = "combine",
         })
     }
-    vim.api.nvim_win_set_cursor(buffer_id, { ime_context.preedit_cursor_row, ime_context.preedit_cursor_col })
+    -- TODO: Fix the cursor position.
+    -- vim.api.nvim_win_set_cursor(buffer_id, { ime_context.preedit_cursor_row, ime_context.preedit_cursor_col })
   else
     -- Clear the preedit text and reset the cursor position if there is no preedit text
     ime_context.entered_preedit_block = false
