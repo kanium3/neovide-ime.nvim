@@ -1,5 +1,8 @@
 local M = {}
 
+vim.api.nvim_set_hl(0, "ImePreedit", { link = "Pmenu", default = true })
+vim.api.nvim_set_hl(0, "ImePreeditCursor", { link = "PmenuSel", default = true })
+
 ---@class ImeContext
 ---@field entered_preedit_block boolean
 ---@field is_commited boolean
@@ -121,6 +124,24 @@ local function preedit_handler_insert(preedit_raw_text, cursor_offset)
   end
 end
 
+local previous_guicursor = nil
+
+local function hide_guicursor()
+  if previous_guicursor ~= nil then
+    return
+  end
+  previous_guicursor = vim.o.guicursor
+  -- Make the cursor a thin vertical line to make it invisible.
+  vim.o.guicursor = "a:ver1"
+end
+local function restore_guicursor()
+  if previous_guicursor == nil then
+    return
+  end
+  vim.o.guicursor = previous_guicursor
+  previous_guicursor = nil
+end
+
 ---@param preedit_raw_text string
 ---@param cursor_offset? [integer, integer] (start_col, end_col) This values
 local function preedit_handler_extmark(preedit_raw_text, cursor_offset)
@@ -139,6 +160,9 @@ local function preedit_handler_extmark(preedit_raw_text, cursor_offset)
   ime_context.entered_preedit_block = true
 
   if preedit_raw_text ~= nil and preedit_raw_text ~= "" and cursor_offset ~= nil then
+    -- Hide the original cursor because cursor will be drawn by the extmark
+    hide_guicursor()
+
     -- Update the preedit text and cursor position if there is preedit text
     ime_context.preedit_cursor_col = ime_context.base_col + cursor_offset[2]
     ime_context.preedit_text_col = ime_context.base_col + string.len(preedit_raw_text)
@@ -149,23 +173,45 @@ local function preedit_handler_extmark(preedit_raw_text, cursor_offset)
     else
       buffer_id = vim.api.nvim_get_current_buf()
     end
+
+    local selected_section
+    if cursor_offset[1] == cursor_offset[2] then
+      -- To get selected character when cursor_offset[1] == cursor_offset[2]:
+      -- 1. Get the preedit text from the cursor end position to the last character.
+      -- 2. Use vim.fn.slice to get the first character of the above text. (This handles multi-byte characters correctly)
+      selected_section = vim.fn.slice(preedit_raw_text:sub(cursor_offset[2] + 1), 0, 1)
+    else
+      selected_section = preedit_raw_text:sub(cursor_offset[1] + 1, cursor_offset[2])
+    end
+
+    -- Set the highlight for the selected character
+    -- If the cursor is at the end of the preedit text (selected_char is empty), append a space and highlight it.
+    -- If not, highlight the selected character.
+    local virt_text = {
+      { preedit_raw_text:sub(1, cursor_offset[1]),                           "ImePreedit" },
+      { selected_section ~= "" and selected_section or " ",                  "ImePreeditCursor" },
+      { preedit_raw_text:sub(cursor_offset[1] + selected_section:len() + 1), "ImePreedit" },
+    }
+
     ime_context.extmark_id = {
       buffer_id,
       vim.api.nvim_buf_set_extmark(
         buffer_id,
-        ns_id, ime_context.base_row - 1, ime_context.base_col, {
+        ns_id,
+        ime_context.base_row - 1, ime_context.base_col,
+        {
           id = ime_context.extmark_id and ime_context.extmark_id[2] or nil,
-          virt_text = { { preedit_raw_text, "Pmenu" } },
+          virt_text = virt_text,
           virt_text_pos = "overlay",
           hl_mode = "combine",
-        })
+        }
+      )
     }
-    -- TODO: Fix the cursor position.
-    -- vim.api.nvim_win_set_cursor(buffer_id, { ime_context.preedit_cursor_row, ime_context.preedit_cursor_col })
   else
     -- Clear the preedit text and reset the cursor position if there is no preedit text
     ime_context.entered_preedit_block = false
     cleanup_extmark()
+    restore_guicursor()
     vim.api.nvim_win_set_cursor(0, { ime_context.base_row, ime_context.base_col })
   end
 end
@@ -200,6 +246,7 @@ end
 
 local function commit_handler_extmark(_commit_raw_text, commit_formatted_text)
   cleanup_extmark()
+  restore_guicursor()
   vim.api.nvim_input(commit_formatted_text)
 
   ime_context.is_commited = true
