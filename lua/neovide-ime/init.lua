@@ -34,13 +34,7 @@ local ime_context = {
 
 local ns_id = vim.api.nvim_create_namespace("neovide_ime_preedit_ns")
 
-
-ime_context.reset = function()
-  ime_context.base_row, ime_context.base_col = 0, 0
-  ime_context.preedit_cursor_row, ime_context.preedit_cursor_col = 0, 0
-  ime_context.preedit_text_row, ime_context.preedit_text_col = 0, 0
-  ime_context.entered_preedit_block = false
-  ime_context.is_commited = false
+local function cleanup_extmark()
   if ime_context.extmark_id ~= nil then
     vim.api.nvim_buf_del_extmark(
       ime_context.extmark_id[1] or 0,
@@ -49,6 +43,17 @@ ime_context.reset = function()
     )
   end
   ime_context.extmark_id = nil
+end
+
+
+
+ime_context.reset = function()
+  ime_context.base_row, ime_context.base_col = 0, 0
+  ime_context.preedit_cursor_row, ime_context.preedit_cursor_col = 0, 0
+  ime_context.preedit_text_row, ime_context.preedit_text_col = 0, 0
+  ime_context.entered_preedit_block = false
+  ime_context.is_commited = false
+  cleanup_extmark()
 end
 
 ---Getting cursor's row and colomn in bytes
@@ -159,14 +164,7 @@ local function preedit_handler_extmark(preedit_raw_text, cursor_offset)
   else
     -- Clear the preedit text and reset the cursor position if there is no preedit text
     ime_context.entered_preedit_block = false
-    if ime_context.extmark_id ~= nil then
-      vim.api.nvim_buf_del_extmark(
-        ime_context.extmark_id[1],
-        ns_id,
-        ime_context.extmark_id[2]
-      )
-      ime_context.extmark_id = nil
-    end
+    cleanup_extmark()
     vim.api.nvim_win_set_cursor(0, { ime_context.base_row, ime_context.base_col })
   end
 end
@@ -200,14 +198,7 @@ local function commit_handler_insert(_commit_raw_text, commit_formatted_text)
 end
 
 local function commit_handler_extmark(_commit_raw_text, commit_formatted_text)
-  if ime_context.extmark_id ~= nil then
-    vim.api.nvim_buf_del_extmark(
-      ime_context.extmark_id[1],
-      ns_id,
-      ime_context.extmark_id[2]
-    )
-    ime_context.extmark_id = nil
-  end
+  cleanup_extmark()
   vim.api.nvim_input(commit_formatted_text)
 
   ime_context.is_commited = true
