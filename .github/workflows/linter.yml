@@ -1,10 +1,7 @@
----
 name: Lint Code Base
 on:
   pull_request: ~
   push:
-    branches:
-      - main
 
 jobs:
   build:
@@ -14,16 +11,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: Lint Code Base(Expect Lua)
-        uses: github/super-linter/slim@v7
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          LINTER_RULES_PATH: /
-          VALIDATE_LUA: false
-          VALIDATE_CHECKOV: false
-          VALIDATE_MARKDOWN_PRETTIER: false
-          VALIDATE_YAML_PRETTIER: false
 
       - uses: taiki-e/install-action@v2
         with:
